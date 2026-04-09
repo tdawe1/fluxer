@@ -1,0 +1,38 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - ca-certificates
+  - curl
+  - git
+  - jq
+  - gettext-base
+
+write_files:
+  - path: /usr/local/bin/fluxer-firstboot.sh
+    permissions: "0755"
+    owner: root:root
+    content: |
+      #!/usr/bin/env bash
+      set -euxo pipefail
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+      chmod a+r /etc/apt/keyrings/docker.asc
+      cat >/etc/apt/sources.list.d/docker.sources <<'EOF'
+      Types: deb
+      URIs: https://download.docker.com/linux/ubuntu
+      Suites: noble
+      Components: stable
+      Architectures: amd64
+      Signed-By: /etc/apt/keyrings/docker.asc
+      EOF
+      apt-get update
+      apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      systemctl enable --now docker
+      mkdir -p /srv/fluxer
+
+runcmd:
+  - /usr/local/bin/fluxer-firstboot.sh
+
+final_message: "Cloud-init finished after $UPTIME seconds"

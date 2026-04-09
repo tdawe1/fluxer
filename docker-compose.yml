@@ -1,0 +1,153 @@
+services:
+  traefik:
+    image: traefik:v3.4
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - --api.dashboard=false
+      - --providers.file.filename=/etc/traefik/dynamic.yml
+      - --providers.file.watch=true
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.websecure.address=:443
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+    networks:
+      - public
+
+  fluxer-server:
+    image: ${FLUXER_SERVER_IMAGE}
+    container_name: fluxer-server
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      FLUXER_CONFIG: /usr/src/app/config/config.json
+    depends_on:
+      fluxer-valkey:
+        condition: service_healthy
+      fluxer-meilisearch:
+        condition: service_healthy
+    volumes:
+      - ./config:/usr/src/app/config:ro
+      - fluxer-data:/usr/src/app/data
+    networks:
+      - public
+      - fluxer-internal
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=fluxer-public
+      - traefik.http.routers.fluxer.rule=Host(`${FLUXER_HOST}`)
+      - traefik.http.routers.fluxer.entrypoints=websecure
+      - traefik.http.routers.fluxer.tls=true
+      - traefik.http.services.fluxer.loadbalancer.server.port=8080
+
+  fluxer-valkey:
+    image: valkey/valkey:8.0.6-alpine
+    container_name: fluxer-valkey
+    restart: unless-stopped
+    command:
+      - valkey-server
+      - --appendonly
+      - "yes"
+    healthcheck:
+      test:
+        - CMD
+        - valkey-cli
+        - ping
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - fluxer-valkey-data:/data
+    networks:
+      - fluxer-internal
+
+  fluxer-meilisearch:
+    image: getmeili/meilisearch:v1.14
+    container_name: fluxer-meilisearch
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MEILI_NO_ANALYTICS: "true"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -qO- http://127.0.0.1:7700/health >/dev/null 2>&1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - fluxer-meili-data:/meili_data
+    networks:
+      - fluxer-internal
+
+  fluxer-livekit:
+    image: livekit/livekit-server:v1.9.11
+    container_name: fluxer-livekit
+    restart: unless-stopped
+    command:
+      - --config
+      - /etc/livekit/livekit.yaml
+      - --node-ip
+      - "64.227.40.190"
+    volumes:
+      - ./config/livekit.yaml:/etc/livekit/livekit.yaml:ro
+    ports:
+      - "7880:7880/tcp"
+      - "7881:7881/tcp"
+      - "3478:3478/udp"
+      - "50000-50100:50000-50100/udp"
+    networks:
+      - public
+      - fluxer-internal
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=fluxer-public
+      - traefik.http.routers.livekit.rule=Host(`${LIVEKIT_HOST}`)
+      - traefik.http.routers.livekit.entrypoints=websecure
+      - traefik.http.routers.livekit.tls=true
+      - traefik.http.services.livekit.loadbalancer.server.port=7880
+
+  fluxer-nats-core:
+    image: nats:2-alpine
+    container_name: fluxer-nats-core
+    restart: unless-stopped
+    command:
+      - --port
+      - "4222"
+    networks:
+      - fluxer-internal
+
+  fluxer-nats-jetstream:
+    image: nats:2-alpine
+    container_name: fluxer-nats-jetstream
+    restart: unless-stopped
+    command:
+      - --jetstream
+      - --store_dir
+      - /data
+      - --port
+      - "4223"
+    volumes:
+      - fluxer-jetstream-data:/data
+    networks:
+      - fluxer-internal
+
+volumes:
+  fluxer-data:
+  fluxer-valkey-data:
+  fluxer-meili-data:
+  fluxer-jetstream-data:
+
+networks:
+  public:
+    name: fluxer-public
+  fluxer-internal:
+    name: fluxer-internal
+    internal: true

@@ -1,0 +1,24 @@
+port: 7880
+
+keys:
+  "${LIVEKIT_API_KEY}": "${LIVEKIT_API_SECRET}"
+
+rtc:
+  tcp_port: 7881
+  port_range_start: 50000
+  port_range_end: 50100
+  use_external_ip: true
+
+turn:
+  enabled: true
+  udp_port: 3478
+
+room:
+  auto_create: true
+  max_participants: 100
+  empty_timeout: 300
+
+webhook:
+  api_key: "${LIVEKIT_API_KEY}"
+  urls:
+    - "http://fluxer-server:8080/api/webhooks/livekit"

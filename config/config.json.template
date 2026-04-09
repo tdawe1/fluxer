@@ -1,0 +1,106 @@
+{
+  "env": "production",
+  "auth": {
+    "connection_initiation_secret": "${CONNECTION_INITIATION_SECRET}",
+    "sudo_mode_secret": "${SUDO_MODE_SECRET}",
+    "vapid": {
+      "public_key": "${VAPID_PUBLIC_KEY}",
+      "private_key": "${VAPID_PRIVATE_KEY}",
+      "email": "${CONTACT_EMAIL}"
+    },
+    "passkeys": {
+      "rp_id": "${FLUXER_HOST}",
+      "rp_name": "Fluxer",
+      "additional_allowed_origins": [
+        "https://${FLUXER_HOST}"
+      ]
+    }
+  },
+  "cookie": {
+    "secure": true,
+    "domain": ""
+  },
+  "database": {
+    "backend": "sqlite",
+    "sqlite_path": "/usr/src/app/data/fluxer.db"
+  },
+  "domain": {
+    "base_domain": "${FLUXER_HOST}",
+    "public_scheme": "https",
+    "public_port": 443,
+    "static_cdn_domain": ""
+  },
+  "instance": {
+    "self_hosted": true,
+    "deployment_mode": "monolith"
+  },
+  "integrations": {
+    "email": {
+      "enabled": false,
+      "provider": "none",
+      "from_name": "Fluxer",
+      "from_email": ""
+    },
+    "search": {
+      "engine": "meilisearch",
+      "url": "http://fluxer-meilisearch:7700",
+      "api_key": "${MEILI_MASTER_KEY}"
+    },
+    "voice": {
+      "enabled": true,
+      "api_key": "${LIVEKIT_API_KEY}",
+      "api_secret": "${LIVEKIT_API_SECRET}",
+      "url": "wss://${LIVEKIT_HOST}",
+      "webhook_url": "http://fluxer-server:8080/api/webhooks/livekit"
+    }
+  },
+  "internal": {
+    "kv": "redis://fluxer-valkey:6379/0",
+    "kv_mode": "standalone",
+    "media_proxy": "http://fluxer-server:8080/media",
+    "queue": "http://fluxer-server:8080/queue"
+  },
+  "proxy": {
+    "trust_cf_connecting_ip": true
+  },
+  "s3": {
+    "access_key_id": "fluxer-local",
+    "secret_access_key": "${S3_SECRET_ACCESS_KEY}",
+    "endpoint": "http://127.0.0.1:8080/s3",
+    "presigned_url_base": "https://${FLUXER_HOST}/s3",
+    "region": "local"
+  },
+  "services": {
+    "admin": {
+      "base_path": "/admin",
+      "oauth_client_secret": "${ADMIN_OAUTH_CLIENT_SECRET}",
+      "secret_key_base": "${ADMIN_SECRET_KEY_BASE}"
+    },
+    "gateway": {
+      "port": 8082,
+      "admin_reload_secret": "${GATEWAY_ADMIN_RELOAD_SECRET}",
+      "media_proxy_endpoint": "https://${FLUXER_HOST}/media",
+      "logger_level": "info"
+    },
+    "marketing": {
+      "enabled": false,
+      "base_path": "/marketing",
+      "secret_key_base": "${MARKETING_SECRET_KEY_BASE}"
+    },
+    "media_proxy": {
+      "secret_key": "${MEDIA_PROXY_SECRET_KEY}",
+      "require_cloudflare_edge": false,
+      "static_mode": false
+    },
+    "nats": {
+      "core_url": "nats://fluxer-nats-core:4222",
+      "jetstream_url": "nats://fluxer-nats-jetstream:4223",
+      "auth_token": ""
+    },
+    "server": {
+      "host": "0.0.0.0",
+      "port": 8080,
+      "static_dir": "/usr/src/app/assets"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+http:
+  routers:
+    fluxer:
+      rule: Host(`fluxer.dawe.dev`)
+      entryPoints:
+        - websecure
+      tls: {}
+      service: fluxer
+    livekit:
+      rule: Host(`lk.dawe.dev`)
+      entryPoints:
+        - websecure
+      tls: {}
+      service: livekit
+
+  services:
+    fluxer:
+      loadBalancer:
+        servers:
+          - url: http://fluxer-server:8080
+    livekit:
+      loadBalancer:
+        servers:
+          - url: http://fluxer-livekit:7880

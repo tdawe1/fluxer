@@ -1,189 +1,154 @@
-> [!CAUTION]
-> I'm repeating it again: Holy smokes, what a ride. Fluxer is taking off much earlier than I'd expected.
->
-> I know it's hard to resist, but please wait a little longer before you dive deep into the current codebase or try to set up self-hosting. I'm aware the current stack isn't very lightweight. I'm working on making self-hosting as straightforward as possible and the development environment likewise.
->
-> Self-hosted deployments won't include any traces of Plutonium, and nothing is paywalled. You can still configure your own tiers and limits in the admin panel.
->
-> Thanks for bearing with me. Development on Fluxer is about to get much easier, and the project will be made sustainable through community contributions and bounties for development work. Stay tuned – there's not much left now.
->
-> I thought I could take it a bit easier while shipping this stabilising update, but Discord's announcement in Februrary has changed things.
->
-> There's just been a lot of work involved in keeping the production deployment up and running, handling trust & safety concerns, answering support emails, handling billing issues, and working on the refactor at the same time. I'm really excited to open up development and make it easier for others to contribute, and I can't wait to see what the community builds on Fluxer!
->
-> As soon as the refactor is ready (not much longer now!), I'll enable PRs and interact more actively and push updates to this repository more frequently. The remaining parts of the refactor are currently being worked on and being tested live in production that has over 125,000 users (and we're only two full-time employees for now). After that, all work will happen openly in public.
->
-> The team is also growing, though we remain small and can't offer very competitive salaries just yet – but if you want to work part-time or contract on projects, or you think you're a great fit for the roles we're hiring for (though not as actively across all roles at this time, but we'll keep you on file for when we are), check out the [careers page](https://fluxer.app/careers) :D
->
-> ❤️
+# Fluxer on DigitalOcean for `dawe.dev`
 
-> [!NOTE]
-> Learn about the developer behind Fluxer, the goals of the project, the tech stack, and what's coming next.
->
-> [Read the launch blog post](https://blog.fluxer.app/how-i-built-fluxer-a-discord-like-chat-app/) · [View full roadmap](https://blog.fluxer.app/roadmap-2026/)
+This bundle is prepared for:
 
-<p align="center">
-  <img src="./media/logo-graphic.png" alt="Fluxer graphic logo" width="400">
-</p>
+- `https://fluxer.dawe.dev`
+- `https://lk.dawe.dev`
 
-<p align="center">
-  <a href="https://fluxer.app/donate">
-    <img src="https://img.shields.io/badge/Donate-fluxer.app%2Fdonate-brightgreen" alt="Donate" /></a>
-  <a href="https://docs.fluxer.app">
-    <img src="https://img.shields.io/badge/Docs-docs.fluxer.app-blue" alt="Documentation" /></a>
-  <a href="./LICENSE">
-    <img src="https://img.shields.io/badge/License-AGPLv3-purple" alt="AGPLv3 License" /></a>
-</p>
+It assumes a single Ubuntu 24.04 DigitalOcean Droplet, Docker Compose, a DigitalOcean load balancer, and Cloudflare-managed DNS.
 
-# Fluxer
+## What This Bundle Contains
 
-Fluxer is a **free and open source instant messaging and VoIP platform** for friends, groups, and communities. Self-host it and every feature is unlocked.
+- `docker-compose.yml`: Traefik, Fluxer, Valkey, Meilisearch, LiveKit, and NATS
+- `config/config.json.template`: Fluxer config template
+- `config/livekit.yaml.template`: LiveKit config template
+- `scripts/generate-secrets.sh`: prints random secrets and VAPID keys
+- `scripts/render-configs.sh`: renders the two config files from `.env`
 
-## Quick links
+## Recommended Droplet
 
-- [Self-hosting guide](https://docs.fluxer.app/self-hosting)
-- [Documentation](https://docs.fluxer.app)
-- [Donate to support development](https://fluxer.app/donate)
-- [Security](https://fluxer.app/security)
+- 4 vCPU
+- 8 GB RAM
+- 100 GB SSD
+- Ubuntu 24.04 x64
 
-## Features
+## Cloudflare
 
-<img src="./media/app-showcase.png" alt="Fluxer showcase" align="right" width="45%" />
+Create two proxied DNS records pointing to your DigitalOcean load balancer IP:
 
-**Real-time messaging** – typing indicators, reactions, and threaded replies.
+- `fluxer.dawe.dev` -> your load balancer IPv4
+- `lk.dawe.dev` -> your load balancer IPv4
 
-**Voice & video** – calls in communities and DMs with screen sharing, powered by LiveKit.
+Recommended Cloudflare settings:
 
-**Rich media** – link previews, image and video attachments, and GIF search via KLIPY.
+- SSL/TLS mode: `Full`
+- Rocket Loader: `Off`
+- Auto Minify for JavaScript: `Off`
+- Email Address Obfuscation: `Off`
 
-**Communities and channels** – text and voice channels organised into categories with granular permissions.
+This bundle does not require Cloudflare API access. Traefik serves the origin directly and Cloudflare terminates public TLS at the edge.
 
-**Custom expressions** – upload custom emojis and stickers for your community.
+## DigitalOcean Firewall
 
-**Self-hostable** – run your own instance with full control of your data and no vendor lock-in.
+Allow:
 
-> [!NOTE]
-> Native mobile apps and federation are top priorities. If you'd like to support this work, [donations](https://fluxer.app/donate) are greatly appreciated. You can also share feedback by emailing developers@fluxer.app.
+- `22/tcp` from your IP only
+- `80/tcp` from anywhere
+- `443/tcp` from anywhere
+- `7881/tcp` from anywhere
+- `3478/udp` from anywhere
+- `50000-50100/udp` from anywhere
 
-## Self-hosting
+## Droplet Bootstrap
 
-> [!NOTE]
-> New to Fluxer? Follow the [self-hosting guide](https://docs.fluxer.app/self-hosting) for step-by-step setup instructions.
-
-TBD
-
-### Deployment helpers
-
-- [`livekitctl`](./fluxer_devops/livekitctl/README.md) – bootstrap a LiveKit SFU for voice and video
-
-## Development
-
-### Tech stack
-
-- [TypeScript](https://www.typescriptlang.org/) and [Node.js](https://nodejs.org/) for backend services
-- [Hono](https://hono.dev/) as the web framework for all HTTP services
-- [Erlang/OTP](https://www.erlang.org/) for the real-time WebSocket gateway (message routing and presence)
-- [React](https://react.dev/) and [Electron](https://www.electronjs.org/) for the desktop and web client
-- [Rust](https://www.rust-lang.org/) compiled to WebAssembly for performance-critical client code
-- [SQLite](https://www.sqlite.org/) for storage by default, with optional [Cassandra](https://cassandra.apache.org/) for distributed deployments
-- [Meilisearch](https://www.meilisearch.com/) for full-text search and indexing
-- [Valkey](https://valkey.io/) (Redis-compatible) for caching, rate limiting, and ephemeral coordination
-- [LiveKit](https://livekit.io/) for voice and video infrastructure
-
-### Devenv development environment
-
-Fluxer supports development through **devenv** only. It provides a reproducible Nix environment and a single, declarative process manager for the dev stack.
-
-1. Install Nix and devenv using the [devenv getting started guide](https://devenv.sh/getting-started/).
-2. Enter the environment:
+Run this on the Droplet:
 
 ```bash
-devenv shell
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y ca-certificates curl git jq gettext-base
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null <<'EOF'
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: noble
+Components: stable
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl enable --now docker
+sudo usermod -aG docker "$USER"
 ```
 
-If you use direnv, the repo includes a `.envrc` that loads devenv automatically – run `direnv allow` once.
+Log out and back in once after adding your user to the `docker` group.
 
-### Getting started
-
-Start all services and the development server with:
+## Prepare The Deploy Directory
 
 ```bash
-devenv up
+mkdir -p /srv/fluxer
+cd /srv/fluxer
 ```
 
-Open the instance in a browser at your dev server URL (e.g. `http://localhost:48763/`).
-
-Emails sent during development (verification codes, notifications, etc.) are captured by a local Mailpit instance. Access the inbox at your dev server URL + `/mailpit/` (e.g. `http://localhost:48763/mailpit/`).
-
-### Voice on a remote VM
-
-If you develop on a remote VM behind Cloudflare Tunnels (or a similar HTTP-only tunnel), voice and video won't work out of the box. Cloudflare Tunnels only proxy HTTP/WebSocket traffic, so WebRTC media transport needs a direct path to the server. Open these ports on the VM's firewall:
-
-| Port        | Protocol | Purpose          |
-| ----------- | -------- | ---------------- |
-| 3478        | UDP      | TURN/STUN        |
-| 7881        | TCP      | ICE-TCP fallback |
-| 50000-50100 | UDP      | RTP/RTCP media   |
-
-The bootstrap script configures LiveKit automatically based on `domain.base_domain` in your `config.json`. When set to a non-localhost domain, it enables external IP discovery so clients can connect directly for media while signaling continues through the tunnel.
-
-### Devcontainer (experimental)
-
-There is experimental support for developing in a **VS Code Dev Container** / GitHub Codespace without Nix. The `.devcontainer/` directory provides a Docker Compose setup with all required tooling and backing services.
+Copy this bundle to the Droplet, then:
 
 ```bash
-# Inside the dev container, start all processes:
-process-compose -f .devcontainer/process-compose.yml up
+cp .env.example .env
+chmod +x ./scripts/*.sh
+./scripts/generate-secrets.sh
+./scripts/render-configs.sh
 ```
 
-Open the app at `http://localhost:48763` and the dev email inbox at `http://localhost:48763/mailpit/`. Predefined VS Code debugging targets are available in `.vscode/launch.json`.
+## Fluxer Source Build
 
-> [!WARNING]
-> Bluesky OAuth is disabled in the devcontainer because it requires HTTPS. All other features work normally.
-
-### Documentation
-
-To develop the documentation site with live preview:
+Clone Fluxer and build the app image:
 
 ```bash
-pnpm dev:docs
+cd /srv/fluxer
+git clone https://github.com/fluxerapp/fluxer.git
+cd fluxer
+git checkout refactor
 ```
 
-## Contributing
+Before building, apply the upstream fixes from your deployment notes:
 
-Fluxer is **free and open source software** licensed under **AGPLv3**. Contributions are welcome.
+- Dockerfile package copy list must match the monorepo
+- add Rust and `wasm-pack` to `fluxer_server/Dockerfile`
+- relax `.dockerignore` for locales, emojis, and build scripts
+- set `FLUXER_CONFIG` during the frontend build
+- fix `FLUXER_CDN_ENDPOINT` empty-string handling in `fluxer_app/rspack.config.mjs`
+- fix the Docker `ENTRYPOINT`
+- add admin CSS build if needed
+- add `fluxerstatic.com` to the monolith CSP if you keep those external assets
+- apply the SSO fixes if you plan to use OIDC
 
-See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for development processes and how to propose changes, and [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) for community guidelines.
+Then build:
 
-## Security
-
-Report vulnerabilities at [fluxer.app/security](https://fluxer.app/security). Do not use public issues for security reports.
-
-<details>
-<summary><strong>License</strong></summary>
-<br>
-
-Copyright (c) 2026 Fluxer Contributors
-
-Licensed under the [GNU Affero General Public License v3](./LICENSE):
-
-```text
-Copyright (c) 2026 Fluxer Contributors
-
-This program is free software: you can redistribute it and/or modify it under
-the terms of the GNU Affero General Public License as published by the Free
-Software Foundation, either version 3 of the License, or (at your option) any
-later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
-details.
-
-You should have received a copy of the GNU Affero General Public License along
-with this program. If not, see https://www.gnu.org/licenses/
+```bash
+cd /srv/fluxer/fluxer
+docker build \
+  -t fluxer-server:local \
+  --build-arg BASE_DOMAIN="fluxer.dawe.dev" \
+  --build-arg FLUXER_CDN_ENDPOINT="" \
+  --build-arg INCLUDE_NSFW_ML=true \
+  -f fluxer_server/Dockerfile .
 ```
 
-See [`LICENSING.md`](./LICENSING.md) for details on commercial licensing and the CLA.
+## Start The Stack
 
-</details>
+From the directory containing this bundle:
+
+```bash
+cd /srv/fluxer
+docker compose up -d
+```
+
+## Verify
+
+```bash
+docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+curl -s https://fluxer.dawe.dev/_health | jq
+curl -sI https://fluxer.dawe.dev/
+curl -sI https://lk.dawe.dev/
+```
+
+## DNS And Cutover
+
+Point both proxied Cloudflare records at the load balancer IP, not the Droplet IP. The load balancer should forward:
+
+- `80/tcp` -> backend `80/tcp`
+- `443/tcp` -> backend `443/tcp`
+
+LiveKit media uses the Droplet IP directly for `7881/tcp`, `3478/udp`, and `50000-50100/udp`.
