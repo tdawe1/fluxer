@@ -287,14 +287,14 @@ function createAppServerInitializer(context: ServiceInitializationContext): Serv
 			metricsCollector: telemetry.metricsCollector,
 			tracing: telemetry.tracing,
 		},
-		            cspDirectives: {
+		                        cspDirectives: {
                     defaultSrc: ["'self'"],
-                    scriptSrc: ["'self'", "'unsafe-inline'", staticCdnHost].filter(Boolean) as string[],
-                    styleSrc: ["'self'", "'unsafe-inline'", staticCdnHost].filter(Boolean) as string[],
-                    imgSrc: ["'self'", 'data:', 'blob:', publicUrlHost, mediaUrlHost, staticCdnHost].filter(Boolean) as string[],
-                    connectSrc: ["'self'", 'wss:', 'ws:', publicUrlHost, 'https://*.dawe.dev', 'wss://*.dawe.dev', staticCdnHost].filter(Boolean) as string[],
-                    fontSrc: ["'self'", staticCdnHost].filter(Boolean) as string[],
-                    mediaSrc: ["'self'", 'blob:', mediaUrlHost, staticCdnHost].filter(Boolean) as string[],
+                    scriptSrc: ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'", staticCdnHost].filter(Boolean),
+                    styleSrc: ["'self'", "'unsafe-inline'", staticCdnHost].filter(Boolean),
+                    imgSrc: ["'self'", 'data:', 'blob:', publicUrlHost, mediaUrlHost, staticCdnHost].filter(Boolean),
+                    connectSrc: ["'self'", 'wss:', 'ws:', publicUrlHost, 'https://*.dawe.dev', 'wss://*.dawe.dev', staticCdnHost].filter(Boolean),
+                    fontSrc: ["'self'", staticCdnHost].filter(Boolean),
+                    mediaSrc: ["'self'", 'blob:', mediaUrlHost, staticCdnHost].filter(Boolean),
                     frameSrc: ["'none'"],
             },
 	});
