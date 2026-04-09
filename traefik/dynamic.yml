@@ -23,4 +23,4 @@ http:
     livekit:
       loadBalancer:
         servers:
-          - url: http://172.17.0.1:7880
+          - url: http://fluxer-livekit:7880
