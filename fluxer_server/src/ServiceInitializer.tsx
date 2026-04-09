@@ -276,6 +276,7 @@ function createAppServerInitializer(context: ServiceInitializationContext): Serv
 	}
 
 	const publicUrlHost = new URL(requireValue(config.endpoints.app, 'endpoints.app')).origin;
+    const staticCdnHost = config.endpoints.static_cdn ? new URL(config.endpoints.static_cdn).origin : undefined;
 	const mediaUrlHost = new URL(requireValue(config.endpoints.media, 'endpoints.media')).origin;
 
 	const appServer = createAppServer({
@@ -286,16 +287,16 @@ function createAppServerInitializer(context: ServiceInitializationContext): Serv
 			metricsCollector: telemetry.metricsCollector,
 			tracing: telemetry.tracing,
 		},
-		cspDirectives: {
-			defaultSrc: ["'self'"],
-			scriptSrc: ["'self'", "'unsafe-inline'"],
-			styleSrc: ["'self'", "'unsafe-inline'"],
-			imgSrc: ["'self'", 'data:', 'blob:', publicUrlHost, mediaUrlHost],
-			connectSrc: ["'self'", 'wss:', 'ws:', publicUrlHost, 'https://lk.dawe.dev', 'wss://lk.dawe.dev', 'https://fluxer.dawe.dev', 'wss://fluxer.dawe.dev'],
-			fontSrc: ["'self'"],
-			mediaSrc: ["'self'", 'blob:', mediaUrlHost],
-			frameSrc: ["'none'"],
-		},
+		            cspDirectives: {
+                    defaultSrc: ["'self'"],
+                    scriptSrc: ["'self'", "'unsafe-inline'", staticCdnHost].filter(Boolean) as string[],
+                    styleSrc: ["'self'", "'unsafe-inline'", staticCdnHost].filter(Boolean) as string[],
+                    imgSrc: ["'self'", 'data:', 'blob:', publicUrlHost, mediaUrlHost, staticCdnHost].filter(Boolean) as string[],
+                    connectSrc: ["'self'", 'wss:', 'ws:', publicUrlHost, 'https://*.dawe.dev', 'wss://*.dawe.dev', staticCdnHost].filter(Boolean) as string[],
+                    fontSrc: ["'self'", staticCdnHost].filter(Boolean) as string[],
+                    mediaSrc: ["'self'", 'blob:', mediaUrlHost, staticCdnHost].filter(Boolean) as string[],
+                    frameSrc: ["'none'"],
+            },
 	});
 
 	return {
