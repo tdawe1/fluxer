@@ -291,7 +291,7 @@ function createAppServerInitializer(context: ServiceInitializationContext): Serv
 			scriptSrc: ["'self'", "'unsafe-inline'"],
 			styleSrc: ["'self'", "'unsafe-inline'"],
 			imgSrc: ["'self'", 'data:', 'blob:', publicUrlHost, mediaUrlHost],
-			connectSrc: ["'self'", 'wss:', 'ws:', publicUrlHost],
+			connectSrc: ["'self'", 'wss:', 'ws:', publicUrlHost, 'https://lk.dawe.dev', 'wss://lk.dawe.dev', 'https://fluxer.dawe.dev', 'wss://fluxer.dawe.dev'],
 			fontSrc: ["'self'"],
 			mediaSrc: ["'self'", 'blob:', mediaUrlHost],
 			frameSrc: ["'none'"],
