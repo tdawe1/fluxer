@@ -95,6 +95,7 @@ services:
   fluxer-livekit:
     image: livekit/livekit-server:v1.9.11
     container_name: fluxer-livekit
+    network_mode: host
     restart: unless-stopped
     command:
       - --config
@@ -103,21 +104,6 @@ services:
       - "64.227.40.190"
     volumes:
       - ./config/livekit.yaml:/etc/livekit/livekit.yaml:ro
-    ports:
-      - "7880:7880/tcp"
-      - "7881:7881/tcp"
-      - "3478:3478/udp"
-      - "50000-50100:50000-50100/udp"
-    networks:
-      - public
-      - fluxer-internal
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=fluxer-public
-      - traefik.http.routers.livekit.rule=Host(`${LIVEKIT_HOST}`)
-      - traefik.http.routers.livekit.entrypoints=websecure
-      - traefik.http.routers.livekit.tls=true
-      - traefik.http.services.livekit.loadbalancer.server.port=7880
 
   fluxer-nats-core:
     image: nats:2-alpine
